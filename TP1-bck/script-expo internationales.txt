@@ -1,0 +1,44 @@
+from datetime import datetime as dt
+from SPARQLWrapper import SPARQLWrapper, JSON
+
+# Retrieve results from SPARQL
+# World's fairs organised in Belgium
+endpoint = "https://query.wikidata.org/bigdata/namespace/wdq/sparql"
+sparql = SPARQLWrapper(endpoint)
+
+# P31 = instance of 
+# Q172754 = World's fair 
+# P17 = country
+# Q31 = Belgium
+# P585 = Point in time
+# P580 = Start time
+# P582 = end time
+
+statement = """
+SELECT DISTINCT ?item ?itemLabel ?PointInTime ?StartTime ?EndTime WHERE {
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+  {
+    SELECT DISTINCT ?item WHERE {
+      ?item p:P31 ?statement0.
+      ?statement0 (ps:P31/(wdt:P279*)) wd:Q172754.
+      ?item p:P17 ?statement1.
+      ?statement1 (ps:P17/(wdt:P279*)) wd:Q31.
+	?item wdt:P585 ?PointInTime.
+	?item wdt:P580 ?StartTime.
+	?item wdt:P582 ?EndTime.
+    }
+    LIMIT 100
+  }
+}
+ORDER BY ?PointInTime
+"""
+
+sparql.setQuery(statement)
+sparql.setReturnFormat(JSON)
+results = sparql.query().convert()
+
+rows = results['results']['bindings']
+print(f"\n{len(rows)} Expositions internationales en Belgique\n")
+print(rows[:10])
+
+
